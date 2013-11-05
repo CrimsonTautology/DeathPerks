@@ -183,11 +183,11 @@ public OnPluginStart()
 	g_hDeathItemCookie = RegClientCookie(COOKIENAME_SPAWN_ITEM, COOKIEDESCRIPTION_SPAWN_ITEM, CookieAccess_Private);
 
 	// Event Hooks
-	HookEventEx("teamplay_round_start", hook_Start, EventHookMode_PostNoCopy);
-	HookEventEx("arena_round_start", hook_Start, EventHookMode_PostNoCopy);
-	HookEventEx("teamplay_round_win", hook_Win, EventHookMode_PostNoCopy);
-	HookEventEx("arena_win_panel", hook_Win, EventHookMode_PostNoCopy);
-	HookEventEx("player_death", event_player_death, EventHookMode_Post);
+	HookEventEx("teamplay_round_start", Event_StartRound, EventHookMode_PostNoCopy);
+	HookEventEx("arena_round_start", Event_StartRound, EventHookMode_PostNoCopy);
+	HookEventEx("teamplay_round_win", Event_WinRound, EventHookMode_PostNoCopy);
+	HookEventEx("arena_win_panel", Event_WinRound, EventHookMode_PostNoCopy);
+	HookEventEx("player_death", Event_PlayerDeath, EventHookMode_Post);
 }
 
 
@@ -225,14 +225,14 @@ public OnMapStart()
 public DonatorMenu:ChangeDeathItemCallback(client) Panel_ChangeDeathItem(client);
 
 
-public hook_Start(Handle:event, const String:name[], bool:dontBroadcast)
+public Event_StartRound(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	CleanUpTimers();
 	g_bRoundEnded = false;
 }
 
 
-public hook_Win(Handle:event, const String:name[], bool:dontBroadcast)
+public Event_WinRound(Handle:event, const String:name[], bool:dontBroadcast)
 {	
 	g_bRoundEnded = true;
 	
@@ -267,7 +267,7 @@ public Bool:IsDonatorInGame(client)
 	return IsClientInGame(client) && !IsFakeClient(client) && IsPlayerDonator(client);
 }
 
-public Action:event_player_death(Handle:event, const String:name[], bool:dontBroadcast)
+public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	// Round ended check
 	if(!g_bRoundEnded)
