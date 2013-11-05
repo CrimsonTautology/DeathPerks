@@ -449,66 +449,7 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 
 		case Action_Frog:
 		{
-			decl Float:vOrigin[3];
-			GetClientEyePosition(iClient, vOrigin);
-			decl Handle:TraceRay;
-			new Float:Angles[3] = VECTOR_ANGLE_DOWN;								// down
-
-			TraceRay = TR_TraceRayFilterEx(vOrigin, Angles, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
-
-			if (TR_DidHit(TraceRay))
-			{
-				decl Float:Distance;
-				decl Float:vEnd[3];
-				TR_GetEndPosition(vEnd, TraceRay);
-				Distance = (GetVectorDistance(vOrigin, vEnd));
-
-				if (Distance < MAX_SPAWN_DISTANCE)
-				{
-					// define where the lightning strike starts
-					new Float:vStart[3];
-					vStart[0] = vEnd[0] + GetRandomInt(-500, 500);
-					vStart[1] = vEnd[1] + GetRandomInt(-500, 500);
-					vStart[2] = vEnd[2] + 800;
-					
-					// define the color of the strike
-					new aColor[4] = LIGHTNING_COLOR;
-													
-					TE_SetupBeamPoints(		vStart, 
-											vEnd, 
-											g_iLightningSprite, 
-											LIGHTNING_HALOINDEX, 
-											LIGHTNING_STARTFRAME, 
-											LIGHTNING_FRAMERATE, 
-											LIGHTNING_LIFE, 
-											LIGHTNING_STARTWIDTH, 
-											LIGHTNING_ENDWIDTH, 
-											LIGHTNING_FADELENGTH, 
-											LIGHTNING_AMPLITUDE, 
-											aColor, 
-											LIGHTNING_SPEED
-																);
-					TE_SendToAll();
-
-					// Lightning sound
-					EmitSoundToAll(LIGHTNING_SOUND_THUNDER, iClient, SNDCHAN_AUTO, SNDLEVEL_GUNFIRE, SND_NOFLAGS, SNDVOL_NORMAL);
-
-					// spawn frog
-					new Handle:pack;
-					g_hFrogTimerHandle[iClient] = CreateDataTimer(FROGTIMER_SPAWN_DELAY, CallSpawnFrog, pack);
-										
-					WritePackCell(pack, iClient);
-					WritePackFloat(pack, vEnd[0]);
-					WritePackFloat(pack, vEnd[1]);
-					WritePackFloat(pack, vEnd[2]);
-				}
-			}
-			else
-			{
-				PrintToChat (iClient, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
-			}
-
-			CloseHandle(TraceRay);
+			SpawnFrog();
 		}
 
 		case Action_Ghost:
@@ -530,6 +471,70 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 
 	
 	return Plugin_Continue;
+}
+
+public SpawnFrog(client)
+{
+	decl Float:vOrigin[3];
+	GetClientEyePosition(client, vOrigin);
+	decl Handle:trace_ray;
+
+	trace_ray = TR_TraceRayFilterEx(vOrigin, VECTOR_ANGLE_DOWN, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
+
+	if (TR_DidHit(trace_ray))
+	{
+		decl Float:distance;
+		decl Float:vEnd[3];
+		TR_GetEndPosition(vEnd, trace_ray);
+		distance = (GetVectorDistance(vOrigin, vEnd));
+
+		if (distance < MAX_SPAWN_DISTANCE)
+		{
+			LightningStrike(vEnd);
+			// spawn frog
+			new Handle:pack;
+			g_hFrogTimerHandle[client] = CreateDataTimer(FROGTIMER_SPAWN_DELAY, CallSpawnFrog, pack);
+
+			WritePackCell(pack, client);
+			WritePackFloat(pack, vEnd[0]);
+			WritePackFloat(pack, vEnd[1]);
+			WritePackFloat(pack, vEnd[2]);
+		}
+	}
+
+	CloseHandle(trace_ray);
+}
+
+public LightningStrike(Float:vEnd[3])
+{
+	// define where the lightning strike starts
+	new Float:vStart[3];
+	vStart[0] = vEnd[0] + GetRandomInt(-500, 500);
+	vStart[1] = vEnd[1] + GetRandomInt(-500, 500);
+	vStart[2] = vEnd[2] + 800;
+
+	// define the color of the strike
+	new aColor[4] = LIGHTNING_COLOR;
+
+	TE_SetupBeamPoints(		vStart, 
+			vEnd, 
+			g_iLightningSprite, 
+			LIGHTNING_HALOINDEX, 
+			LIGHTNING_STARTFRAME, 
+			LIGHTNING_FRAMERATE, 
+			LIGHTNING_LIFE, 
+			LIGHTNING_STARTWIDTH, 
+			LIGHTNING_ENDWIDTH, 
+			LIGHTNING_FADELENGTH, 
+			LIGHTNING_AMPLITUDE, 
+			aColor, 
+			LIGHTNING_SPEED
+			);
+	TE_SendToAll();
+
+	// Lightning sound
+	EmitSoundToAll(LIGHTNING_SOUND_THUNDER, client, SNDCHAN_AUTO, SNDLEVEL_GUNFIRE, SND_NOFLAGS, SNDVOL_NORMAL);
+
 }
 
 
@@ -753,7 +758,7 @@ public Action:CallExplodeObject(Handle:timer, Handle:pack)
 
 	ExplodeObject(client, object, damage);
 
-	KillTimer(timer);
+	//TODO hook to handle?
 }
 
 public ExplodeObject(client, object, damage)
