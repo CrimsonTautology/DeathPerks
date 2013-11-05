@@ -357,21 +357,21 @@ public SpawnPumpkin(client)
 
 	if (CanSpawnEntity() && GetTraceRayDownVectors(client, vOrigin, vEnd))
 	{
-		new pumpkin = CreateEntityByName(ENTITY_NAME_PUMPKIN);
+		new iPumpkin = CreateEntityByName(ENTITY_NAME_PUMPKIN);
 
-		if(IsValidEntity(pumpkin))
+		if(IsValidEntity(iPumpkin))
 		{
-			DispatchSpawn(pumpkin);
+			DispatchSpawn(iPumpkin);
 			vEnd[2] += OFFSET_HEIGHT_PUMPKIN;
 
-			TeleportEntity(pumpkin, vEnd, VECTOR_ANGLE_PUMPKIN, NULL_VECTOR);
+			TeleportEntity(iPumpkin, vEnd, VECTOR_ANGLE_PUMPKIN, NULL_VECTOR);
 
 			// explode pumpkin
 			new Handle:pack;
 			g_hPumpkinTimerHandle[client] = CreateDataTimer(PUMPKINTIMER_EXPLODE_DELAY, CallExplodePumpkin, pack);
 
 			WritePackCell(pack, client);
-			WritePackCell(pack, pumpkin);
+			WritePackCell(pack, iPumpkin);
 		}
 	}
 }
