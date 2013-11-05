@@ -329,7 +329,7 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 	return Plugin_Continue;
 }
 
-public bool:GetTraceRayDownVectors(client, Float:vOrigin[3], Float:vEnd[3], &Float:distance)
+public bool:GetTraceRayDownVectors(client, Float:vOrigin[3], Float:vEnd[3])
 {
 	decl Handle:trace_ray;
 	GetClientEyePosition(client, vOrigin);
@@ -343,8 +343,8 @@ public bool:GetTraceRayDownVectors(client, Float:vOrigin[3], Float:vEnd[3], &Flo
 
 	TR_GetEndPosition(vEnd, trace_ray);
 	CloseHandle(trace_ray);
-	distance = (GetVectorDistance(vOrigin, vEnd));
-	if (distance < MAX_SPAWN_DISTANCE)
+
+	if (GetVectorDistance(vOrigin, vEnd) < MAX_SPAWN_DISTANCE)
 	{
 		return false;
 	}
@@ -353,61 +353,27 @@ public bool:GetTraceRayDownVectors(client, Float:vOrigin[3], Float:vEnd[3], &Flo
 }
 public SpawnPumpkin(client)
 {
-	decl Float:vOrigin[3];
-	GetClientEyePosition(client, vOrigin);
-	decl Handle:trace_ray;
+	decl Float:vOrigin[3], vEnd[3];
 
-	trace_ray = TR_TraceRayFilterEx(vOrigin, VECTOR_ANGLE_DOWN, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
-
-	if (TR_DidHit(trace_ray))
+	if (CanSpawnEntity() && GetTraceRayDownVectors(client, vOrigin, vEnd))
 	{
-		decl Float:Distance;
-		decl Float:vEnd[3];
-		TR_GetEndPosition(vEnd, trace_ray);
-		Distance = (GetVectorDistance(vOrigin, vEnd));
+		new pumpkin = CreateEntityByName(ENTITY_NAME_PUMPKIN);
 
-		if (Distance < MAX_SPAWN_DISTANCE)
+		if(IsValidEntity(pumpkin))
 		{
-			new iPumpkin = CreateEntityByName(ENTITY_NAME_PUMPKIN);
+			DispatchSpawn(pumpkin);
+			vEnd[2] += OFFSET_HEIGHT_PUMPKIN;
 
-			if(IsValidEntity(iPumpkin))
-			{		
-				if(CanSpawnEntity())
-				{
-					PrintToChat (client, "[DeathPerks] Pumpkin spawned.");
+			TeleportEntity(pumpkin, vEnd, VECTOR_ANGLE_PUMPKIN, NULL_VECTOR);
 
-					DispatchSpawn(iPumpkin);
-					vEnd[2] += OFFSET_HEIGHT_PUMPKIN;
+			// explode pumpkin
+			new Handle:pack;
+			g_hPumpkinTimerHandle[client] = CreateDataTimer(PUMPKINTIMER_EXPLODE_DELAY, CallExplodePumpkin, pack);
 
-					new Float:ModelAngle[3] = VECTOR_ANGLE_PUMPKIN;
-					TeleportEntity(iPumpkin, vEnd, ModelAngle, NULL_VECTOR);
-
-					// explode pumpkin
-					new Handle:pack;
-					g_hPumpkinTimerHandle[client] = CreateDataTimer(PUMPKINTIMER_EXPLODE_DELAY, CallExplodePumpkin, pack);
-
-					WritePackCell(pack, client);
-					WritePackCell(pack, iPumpkin);
-
-				}
-				else
-				{
-					PrintToChat (client, "[DeathPerks] ERROR - Unable to spawn pumpkin, maxEntities reached.");
-				}
-
-			}
-			else
-			{
-				PrintToChat (client, "[DeathPerks] ERROR - Unknown error, pumpkin spawn failed.");
-			}
+			WritePackCell(pack, client);
+			WritePackCell(pack, pumpkin);
 		}
 	}
-	else
-	{
-		PrintToChat (client, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
-	}
-
-	CloseHandle(trace_ray);
 }
 
 public SpawnBeachBall(client)
