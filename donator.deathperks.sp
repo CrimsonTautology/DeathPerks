@@ -378,128 +378,89 @@ public SpawnPumpkin(client)
 
 public SpawnBeachBall(client)
 {
-	new iBall = CreateEntityByName(ENTITY_NAME_BALL);
-
-	if(IsValidEntity(iBall))
+	if(CanSpawnEntity())
 	{
-		decl Float:vOrigin[3];
-		GetClientEyePosition(client, vOrigin);
+		new iBall = CreateEntityByName(ENTITY_NAME_BALL);
 
-		vOrigin[2] += OFFSET_HEIGHT_BALL;
+		if(IsValidEntity(iBall))
+		{
+			decl Float:vOrigin[3];
+			GetClientEyePosition(client, vOrigin);
 
-		DispatchKeyValue(iBall, "model", MODEL_PATH_BALL);
-		DispatchKeyValue(iBall, "disableshadows", "1");
-		DispatchKeyValue(iBall, "skin", "0");
-		DispatchKeyValue(iBall, "physicsmode", "1");
-		DispatchKeyValue(iBall, "spawnflags", "256");
-		DispatchSpawn(iBall);
+			vOrigin[2] += OFFSET_HEIGHT_BALL;
 
-		// Set ball size
-		//SetEntPropFloat(iBall, Prop_Send, "m_flModelScale", BALLPARAM_SCALE);
+			DispatchKeyValue(iBall, "model", MODEL_PATH_BALL);
+			DispatchKeyValue(iBall, "disableshadows", "1");
+			DispatchKeyValue(iBall, "skin", "0");
+			DispatchKeyValue(iBall, "physicsmode", "1");
+			DispatchKeyValue(iBall, "spawnflags", "256");
+			DispatchSpawn(iBall);
 
-		new Float:ModelAngle[3] = VECTOR_ANGLE_BALL;
-		TeleportEntity(iBall, vOrigin, ModelAngle, NULL_VECTOR);
+			// Set ball size
+			//SetEntPropFloat(iBall, Prop_Send, "m_flModelScale", BALLPARAM_SCALE);
 
-		PrintToChat (client, "[DeathPerks] Ball spawned.");
+			new Float:ModelAngle[3] = VECTOR_ANGLE_BALL;
+			TeleportEntity(iBall, vOrigin, ModelAngle, NULL_VECTOR);
+
+			PrintToChat (client, "[DeathPerks] Ball spawned.");
+		}
 	}
 
 }
 
 public SpawnOildrum(client)
 {
-	decl Float:vOrigin[3];
-	GetClientEyePosition(client, vOrigin);
-	decl Handle:trace_ray;
+	decl Float:vOrigin[3], vEnd[3];
 
-	trace_ray = TR_TraceRayFilterEx(vOrigin, VECTOR_ANGLE_DOWN, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
-
-	if (TR_DidHit(trace_ray))
+	if (CanSpawnEntity() && GetTraceRayDownVectors(client, vOrigin, vEnd))
 	{
-		decl Float:Distance;
-		decl Float:vEnd[3];
-		TR_GetEndPosition(vEnd, trace_ray);
-		Distance = (GetVectorDistance(vOrigin, vEnd));
+		new iOildrum = CreateEntityByName(ENTITY_NAME_OILDRUM);
 
-		if (Distance < MAX_SPAWN_DISTANCE)
-		{
-			new iOildrum = CreateEntityByName(ENTITY_NAME_OILDRUM);
+		if(IsValidEntity(iOildrum))
+		{		
+			PrintToChat (client, "[DeathPerks] Oildrum spawned.");
 
-			if(IsValidEntity(iOildrum))
-			{		
-				if(GetEntityCount() < GetMaxEntities()-32)
-				{
-					PrintToChat (client, "[DeathPerks] Oildrum spawned.");
+			SetEntityModel(iOildrum, MODEL_PATH_OILDRUM);
+			vEnd[2] += OFFSET_HEIGHT_OILDRUM;
 
-					SetEntityModel(iOildrum, MODEL_PATH_OILDRUM);
-					vEnd[2] += OFFSET_HEIGHT_OILDRUM;
+			DispatchSpawn(iOildrum);
+			SetEntityMoveType(iOildrum, MOVETYPE_VPHYSICS);
+			SetEntProp(iOildrum, Prop_Send, "m_CollisionGroup", 5);
+			SetEntProp(iOildrum, Prop_Send, "m_nSolidType", 6);
 
-					DispatchSpawn(iOildrum);
-					SetEntityMoveType(iOildrum, MOVETYPE_VPHYSICS);
-					SetEntProp(iOildrum, Prop_Send, "m_CollisionGroup", 5);
-					SetEntProp(iOildrum, Prop_Send, "m_nSolidType", 6);
+			new Float:ModelAngle[3] = VECTOR_ANGLE_OILDRUM;
+			TeleportEntity(iOildrum, vEnd, ModelAngle, NULL_VECTOR);
 
-					new Float:ModelAngle[3] = VECTOR_ANGLE_OILDRUM;
-					TeleportEntity(iOildrum, vEnd, ModelAngle, NULL_VECTOR);
+			// explode drum
+			new Handle:pack;
+			g_hDrumTimerHandle[client] = CreateDataTimer(DRUMTIMER_EXPLODE_DELAY, CallExplodeDrum, pack);
 
-					// explode drum
-					new Handle:pack;
-					g_hDrumTimerHandle[client] = CreateDataTimer(DRUMTIMER_EXPLODE_DELAY, CallExplodeDrum, pack);
-
-					WritePackCell(pack, client);
-					WritePackCell(pack, iOildrum);
-
-				}
-				else
-				{
-					PrintToChat (client, "[DeathPerks] ERROR - Unable to spawn oildrum, maxEntities reached.");
-				}
-
-			}
-			else
-			{
-				PrintToChat (client, "[DeathPerks] ERROR - Unknown error, oildrum spawn failed.");
-			}
+			WritePackCell(pack, client);
+			WritePackCell(pack, iOildrum);
 		}
 		else
 		{
-			PrintToChat (client, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
+			PrintToChat (client, "[DeathPerks] ERROR - Unknown error, oildrum spawn failed.");
 		}
 	}
-
-	CloseHandle(trace_ray);
-
 }
 
 public SpawnFrog(client)
 {
-	decl Float:vOrigin[3];
-	GetClientEyePosition(client, vOrigin);
-	decl Handle:trace_ray;
+	decl Float:vOrigin[3], vEnd[3];
 
-	trace_ray = TR_TraceRayFilterEx(vOrigin, VECTOR_ANGLE_DOWN, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
-
-	if (TR_DidHit(trace_ray))
+	if (CanSpawnEntity() && GetTraceRayDownVectors(client, vOrigin, vEnd))
 	{
-		decl Float:distance;
-		decl Float:vEnd[3];
-		TR_GetEndPosition(vEnd, trace_ray);
-		distance = (GetVectorDistance(vOrigin, vEnd));
+		LightningStrike(vEnd);
+		// spawn frog
+		new Handle:pack;
+		g_hFrogTimerHandle[client] = CreateDataTimer(FROGTIMER_SPAWN_DELAY, CallSpawnFrog, pack);
 
-		if (distance < MAX_SPAWN_DISTANCE)
-		{
-			LightningStrike(vEnd);
-			// spawn frog
-			new Handle:pack;
-			g_hFrogTimerHandle[client] = CreateDataTimer(FROGTIMER_SPAWN_DELAY, CallSpawnFrog, pack);
-
-			WritePackCell(pack, client);
-			WritePackFloat(pack, vEnd[0]);
-			WritePackFloat(pack, vEnd[1]);
-			WritePackFloat(pack, vEnd[2]);
-		}
+		WritePackCell(pack, client);
+		WritePackFloat(pack, vEnd[0]);
+		WritePackFloat(pack, vEnd[1]);
+		WritePackFloat(pack, vEnd[2]);
 	}
-
-	CloseHandle(trace_ray);
 }
 
 public LightningStrike(Float:vEnd[3])
