@@ -155,6 +155,7 @@ enum _:CookieActionType
 //	Action_Bird = 7,
 };
 
+new Array:
 
 // GLOBALS
 new Handle:g_hDeathItemCookie = INVALID_HANDLE;
@@ -262,11 +263,6 @@ public Event_WinRound(Handle:event, const String:name[], bool:dontBroadcast)
 
 }
 
-public Bool:IsDonatorInGame(client)
-{
-	return IsClientInGame(client) && !IsFakeClient(client) && IsPlayerDonator(client);
-}
-
 public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	// Round ended check
@@ -333,6 +329,10 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 	return Plugin_Continue;
 }
 
+public GetTraceRayVectors(client, Float:vOrigin[3], Float:vEnd[3], &Float:distance)
+{
+	CloseHandle(trace_ray);
+}
 public SpawnPumpkin(client)
 {
 	decl Float:vOrigin[3];
@@ -354,7 +354,7 @@ public SpawnPumpkin(client)
 
 			if(IsValidEntity(iPumpkin))
 			{		
-				if(GetEntityCount() < GetMaxEntities()-32)
+				if(CanSpawnEntity())
 				{
 					PrintToChat (client, "[DeathPerks] Pumpkin spawned.");
 
@@ -674,6 +674,16 @@ public bool:TraceRayProp(entityhit, mask)
 		return true;
 	}
 	return false;
+}
+
+public Bool:IsDonatorInGame(client)
+{
+	return IsClientInGame(client) && !IsFakeClient(client) && IsPlayerDonator(client);
+}
+
+public Bool:CanSpawnEntity()
+{
+	return GetEntityCount() < GetMaxEntities()-32;
 }
 
 
