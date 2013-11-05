@@ -770,27 +770,7 @@ public Action:CallExplodePumpkin(Handle:Timer, Handle:pack)
 // Cleanup when player leaves
 public OnClientDisconnect(client)
 {
-	// kill frog timer if we quickly disconnect
-	if(g_hFrogTimerHandle[client] != INVALID_HANDLE)
-	{
-		KillTimer(g_hFrogTimerHandle[client]);
-		g_hFrogTimerHandle[client] = INVALID_HANDLE;
-	}
-	
-	// kill drum timer if we quickly disconnect
-	if(g_hDrumTimerHandle[client] != INVALID_HANDLE)
-	{
-		KillTimer(g_hDrumTimerHandle[client]);
-		g_hDrumTimerHandle[client] = INVALID_HANDLE;
-	}
-	
-	// kill pumpkin timer if we quickly disconnect
-	if(g_hPumpkinTimerHandle[client] != INVALID_HANDLE)
-	{
-		KillTimer(g_hPumpkinTimerHandle[client]);
-		g_hPumpkinTimerHandle[client] = INVALID_HANDLE;
-	}
-	
+	CleanUpTimersForClient(client);
 }
 
 
@@ -803,12 +783,17 @@ public OnMapEnd()
 // Cleanup all timers
 public CleanUpTimers()
 {
-	for(new i = 0; i < (MAXPLAYERS + 1); i++)
+    for (new client=1; client <= MaxClients; client++)
 	{
-		SafeKillTimer(g_hFrogTimerHandle[i]);
-		SafeKillTimer(g_hDrumTimerHandle[i]);
-		SafeKillTimer(g_hPumpkinTimerHandle[i]);
+		CleanUpTimersForClient(client);
 	}
+}
+
+public CleanUpTimersForClient(client)
+{
+	SafeKillTimer(g_hFrogTimerHandle[client]);
+	SafeKillTimer(g_hDrumTimerHandle[client]);
+	SafeKillTimer(g_hPumpkinTimerHandle[client]);
 }
 
 public SafeKillTimer(Handle:timer)
