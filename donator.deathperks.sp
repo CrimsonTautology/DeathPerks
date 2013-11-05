@@ -227,38 +227,8 @@ public DonatorMenu:ChangeDeathItemCallback(iClient) Panel_ChangeDeathItem(iClien
 
 public hook_Start(Handle:event, const String:name[], bool:dontBroadcast)
 {
-	// Cleanup all frogs
-	for(new i = 0; i < (MAXPLAYERS + 1); i++)
-	{
-		if(g_hFrogTimerHandle[i] != INVALID_HANDLE)
-		{
-			KillTimer(g_hFrogTimerHandle[i]);
-			g_hFrogTimerHandle[i] = INVALID_HANDLE;
-		}
-	}
-
-	// Cleanup all drums
-	for(new i = 0; i < (MAXPLAYERS + 1); i++)
-	{
-		if(g_hDrumTimerHandle[i] != INVALID_HANDLE)
-		{
-			KillTimer(g_hDrumTimerHandle[i]);
-			g_hDrumTimerHandle[i] = INVALID_HANDLE;
-		}
-	}
-
-	// Cleanup all pumpkins
-	for(new i = 0; i < (MAXPLAYERS + 1); i++)
-	{
-		if(g_hPumpkinTimerHandle[i] != INVALID_HANDLE)
-		{
-			KillTimer(g_hPumpkinTimerHandle[i]);
-			g_hPumpkinTimerHandle[i] = INVALID_HANDLE;
-		}
-	}
-
+	CleanUpTimers();
 	g_bRoundEnded = false;
-
 }
 
 
@@ -824,40 +794,29 @@ public OnClientDisconnect(client)
 }
 
 
-// Cleanup all timers on map end
 public OnMapEnd()
 {
-
-	// Kill frog timers for all players
-	for(new i = 0; i < (MAXPLAYERS + 1); i++)
-	{
-		if(g_hFrogTimerHandle[i] != INVALID_HANDLE)
-		{
-			KillTimer(g_hFrogTimerHandle[i]);
-			g_hFrogTimerHandle[i] = INVALID_HANDLE;
-		}
-	}
-
-	// Kill drum timers for all players
-	for(new i = 0; i < (MAXPLAYERS + 1); i++)
-	{
-		if(g_hDrumTimerHandle[i] != INVALID_HANDLE)
-		{
-			KillTimer(g_hDrumTimerHandle[i]);
-			g_hDrumTimerHandle[i] = INVALID_HANDLE;
-		}
-	}
-
-	// Kill pumpkin timers for all players
-	for(new i = 0; i < (MAXPLAYERS + 1); i++)
-	{
-		if(g_hPumpkinTimerHandle[i] != INVALID_HANDLE)
-		{
-			KillTimer(g_hPumpkinTimerHandle[i]);
-			g_hPumpkinTimerHandle[i] = INVALID_HANDLE;
-		}
-	}
-
+	CleanUpTimers();
 }
 
+
+// Cleanup all timers
+public CleanUpTimers()
+{
+	for(new i = 0; i < (MAXPLAYERS + 1); i++)
+	{
+		SafeKillTimer(g_hFrogTimerHandle[i]);
+		SafeKillTimer(g_hDrumTimerHandle[i]);
+		SafeKillTimer(g_hPumpkinTimerHandle[i]);
+	}
+}
+
+public SafeKillTimer(Handle:timer)
+{
+	if(timer != INVALID_HANDLE)
+	{
+		KillTimer(timer);
+		timer = INVALID_HANDLE;
+	}
+}
 
