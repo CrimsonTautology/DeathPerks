@@ -133,7 +133,7 @@
 // Ghost Parameters
 #define GHOSTPOV_DISABLE			0												// turn off third person pov
 #define GHOSTPOV_ENABLE				2												// turn on third person pov
-#define TFCONDITION_GHOST			TFCond_HalloweenGhostMode						// the tf condition # for ghost mode
+#define TFCONDITION_GHOST			76						// the tf condition # for ghost mode
 #define	SOUND_NAME_GHOST_1			"vo/halloween_boo1.wav"
 #define	SOUND_NAME_GHOST_2			"vo/halloween_boo2.wav"
 #define	SOUND_NAME_GHOST_3			"vo/halloween_boo3.wav"
