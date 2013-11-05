@@ -267,41 +267,34 @@ public hook_Win(Handle:event, const String:name[], bool:dontBroadcast)
 	g_bRoundEnded = true;
 	
 	// Handle Ghost
-	for (new iClientIdx = 1; iClientIdx <= MaxClients; iClientIdx++)
+	for (new iClientIdx = 1; iClientIdx <= MaxClients && IsDonatorInGame(iClientIdx); iClientIdx++)
 	{
-		// Is client in game?
-		if (IsClientInGame(iClientIdx))
+		decl String:iTmp[32];
+		new iSelected;
+
+		GetClientCookie(iClientIdx, g_hDeathItemCookie, iTmp, sizeof(iTmp));
+		iSelected = StringToInt(iTmp);
+
+		if (_:iSelected == Action_Ghost)
 		{
-			// Is this client fake?
-			if (!IsFakeClient(iClientIdx))
+			// apparently will crash server if you try to set this twice (like on plr_hightower_event)
+			if (!TF2_IsPlayerInCondition(iClientIdx, TFCONDITION_GHOST))
 			{
-				// Is this client a donator?
-				if (IsPlayerDonator(iClientIdx))
-				{
-					decl String:iTmp[32];
-					new iSelected;
-
-					GetClientCookie(iClientIdx, g_hDeathItemCookie, iTmp, sizeof(iTmp));
-					iSelected = StringToInt(iTmp);
-
-					if (_:iSelected == Action_Ghost)
-					{
-						// apparently will crash server if you try to set this twice (like on plr_hightower_event)
-						if (!TF2_IsPlayerInCondition(iClientIdx, TFCONDITION_GHOST))
-						{
-							PrintToChat (iClientIdx, "[DeathPerks] Ghost spawned.");
-							TF2_AddCondition(iClientIdx, TFCONDITION_GHOST, 60.0, 0);
-						}
-						else
-						{
-							PrintToChat (iClientIdx, "[DeathPerks] ERROR - Already a ghost.");
-						}
-					}
-				}
+				PrintToChat (iClientIdx, "[DeathPerks] Ghost spawned.");
+				TF2_AddCondition(iClientIdx, TFCONDITION_GHOST, 60.0, 0);
+			}
+			else
+			{
+				PrintToChat (iClientIdx, "[DeathPerks] ERROR - Already a ghost.");
 			}
 		}
 	}
 
+}
+
+public Bool:IsDonatorInGame(client)
+{
+	return IsClientInGame(client) && !IsFakeClient(client) && IsPlayerDonator(client);
 }
 
 
