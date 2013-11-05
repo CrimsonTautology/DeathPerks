@@ -815,7 +815,7 @@ public CleanUpTimersForClient(client)
 	SafeKillTimer(g_hPumpkinTimerHandle[client]);
 }
 
-public SafeKillTimer(Handle:timer)
+public SafeKillTimer(&Handle:timer)
 {
 	if(timer != INVALID_HANDLE)
 	{
