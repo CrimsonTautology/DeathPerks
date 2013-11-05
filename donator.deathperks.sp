@@ -463,19 +463,19 @@ public SpawnFrog(client)
 	}
 }
 
-public LightningStrike(Float:vEnd[3])
+public LightningStrike(Float:vOrigin[3])
 {
 	// define where the lightning strike starts
 	new Float:vStart[3];
-	vStart[0] = vEnd[0] + GetRandomInt(-500, 500);
-	vStart[1] = vEnd[1] + GetRandomInt(-500, 500);
-	vStart[2] = vEnd[2] + 800;
+	vStart[0] = vOrigin[0] + GetRandomInt(-500, 500);
+	vStart[1] = vOrigin[1] + GetRandomInt(-500, 500);
+	vStart[2] = vOrigin[2] + 800;
 
 	// define the color of the strike
 	new aColor[4] = LIGHTNING_COLOR;
 
 	TE_SetupBeamPoints(		vStart, 
-			vEnd, 
+			vOrigin, 
 			g_iLightningSprite, 
 			LIGHTNING_HALOINDEX, 
 			LIGHTNING_STARTFRAME, 
@@ -493,6 +493,22 @@ public LightningStrike(Float:vEnd[3])
 	// Lightning sound
 	EmitSoundToAll(LIGHTNING_SOUND_THUNDER, client, SNDCHAN_AUTO, SNDLEVEL_GUNFIRE, SND_NOFLAGS, SNDVOL_NORMAL);
 
+}
+
+public Explosion(vOrigin)
+{
+	new hExplosion = CreateEntityByName(ENTITY_NAME_EXPLOSION);
+	DispatchKeyValue(hExplosion, EXPLOSIONKEYVALUE_MAGNITUDE, EXPLOSION_MAGNITUDE);
+	DispatchKeyValue(hExplosion, EXPLOSIONKEYVALUE_SPAWNFLAGS, EXPLOSION_SPAWNFLAGS);
+	DispatchKeyValue(hExplosion, EXPLOSIONKEYVALUE_RADIUS, EXPLOSION_RADIUS);
+
+	if ( DispatchSpawn(hExplosion) )
+	{
+		ActivateEntity(hExplosion);
+		TeleportEntity(hExplosion, vOrigin, NULL_VECTOR, NULL_VECTOR);
+		AcceptEntityInput(hExplosion, "Explode");
+		AcceptEntityInput(hExplosion, "Kill");
+	}
 }
 
 // Create Menu 
@@ -646,12 +662,11 @@ public Action:CallSpawnFrog(Handle:Timer, Handle:pack)
 
 	//	PrintToChat (client, "[DeathPerks] Attempting to create frog at (%f, %f, %f) for client #%d.", vEnd[0], vEnd[1], vEnd[2], client);
 
-	new iFrog = CreateEntityByName(ENTITY_NAME_FROG);
-
-	if(IsValidEntity(iFrog))
-	{		
-		if(GetEntityCount() < GetMaxEntities()-32)
-		{
+	if(CanSpawnEntity())
+	{
+		new iFrog = CreateEntityByName(ENTITY_NAME_FROG);
+		if(IsValidEntity(iFrog))
+		{		
 			SetEntityModel(iFrog, MODEL_PATH_FROG);
 			DispatchSpawn(iFrog);
 			vEnd[2] += OFFSET_HEIGHT_FROG;
@@ -660,36 +675,13 @@ public Action:CallSpawnFrog(Handle:Timer, Handle:pack)
 			TeleportEntity(iFrog, vEnd, ModelAngle, NULL_VECTOR);
 
 			// Explosion
-			new hExplosion = CreateEntityByName(ENTITY_NAME_EXPLOSION);
-			DispatchKeyValue(hExplosion, EXPLOSIONKEYVALUE_MAGNITUDE, EXPLOSION_MAGNITUDE);
-			DispatchKeyValue(hExplosion, EXPLOSIONKEYVALUE_SPAWNFLAGS, EXPLOSION_SPAWNFLAGS);
-			DispatchKeyValue(hExplosion, EXPLOSIONKEYVALUE_RADIUS, EXPLOSION_RADIUS);
-
-			if ( DispatchSpawn(hExplosion) )
-			{
-				ActivateEntity(hExplosion);
-				TeleportEntity(hExplosion, vEnd, NULL_VECTOR, NULL_VECTOR);
-				AcceptEntityInput(hExplosion, "Explode");
-				AcceptEntityInput(hExplosion, "Kill");
-			}
-
+			Explosion(vEnd);
 
 			PrintToChat (client, "[DeathPerks] Frog spawned.");
 		}
-		else
-		{
-			PrintToChat (client, "[DeathPerks] ERROR - Unable to spawn frog, maxEntities reached.");
-		}
-
 	}
-	else
-	{
-		PrintToChat (client, "[DeathPerks] ERROR - Unknown error, frog spawn failed.");
-	}
-
 
 	g_hFrogTimerHandle[client] = INVALID_HANDLE;
-
 }
 
 
