@@ -296,62 +296,7 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 		
 		case Action_Pumpkin:
 		{
-			decl Float:vOrigin[3];
-			GetClientEyePosition(iClient, vOrigin);
-			decl Handle:TraceRay;
-			new Float:Angles[3] = VECTOR_ANGLE_DOWN;								// down
-
-			TraceRay = TR_TraceRayFilterEx(vOrigin, Angles, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
-
-			if (TR_DidHit(TraceRay))
-			{
-				decl Float:Distance;
-				decl Float:vEnd[3];
-				TR_GetEndPosition(vEnd, TraceRay);
-				Distance = (GetVectorDistance(vOrigin, vEnd));
-
-				if (Distance < MAX_SPAWN_DISTANCE)
-				{
-					new iPumpkin = CreateEntityByName(ENTITY_NAME_PUMPKIN);
-					
-					if(IsValidEntity(iPumpkin))
-					{		
-						if(GetEntityCount() < GetMaxEntities()-32)
-						{
-							PrintToChat (iClient, "[DeathPerks] Pumpkin spawned.");
-							
-							DispatchSpawn(iPumpkin);
-							vEnd[2] += OFFSET_HEIGHT_PUMPKIN;
-
-							new Float:ModelAngle[3] = VECTOR_ANGLE_PUMPKIN;
-							TeleportEntity(iPumpkin, vEnd, ModelAngle, NULL_VECTOR);
-
-							// explode pumpkin
-							new Handle:pack;
-							g_hPumpkinTimerHandle[iClient] = CreateDataTimer(PUMPKINTIMER_EXPLODE_DELAY, CallExplodePumpkin, pack);
-												
-							WritePackCell(pack, iClient);
-							WritePackCell(pack, iPumpkin);
-
-							}
-						else
-						{
-							PrintToChat (iClient, "[DeathPerks] ERROR - Unable to spawn pumpkin, maxEntities reached.");
-						}
-						
-					}
-					else
-					{
-						PrintToChat (iClient, "[DeathPerks] ERROR - Unknown error, pumpkin spawn failed.");
-					}
-				}
-			}
-			else
-			{
-				PrintToChat (iClient, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
-			}
-
-			CloseHandle(TraceRay);
+			SpawnPumpkin(iClient);
 		}
 		
 		case Action_Ball:
@@ -388,6 +333,65 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 
 	
 	return Plugin_Continue;
+}
+
+public SpawnPumpkin(client)
+{
+	decl Float:vOrigin[3];
+	GetClientEyePosition(client, vOrigin);
+	decl Handle:trace_ray;
+
+	trace_ray = TR_TraceRayFilterEx(vOrigin, VECTOR_ANGLE_DOWN, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
+
+	if (TR_DidHit(trace_ray))
+	{
+		decl Float:Distance;
+		decl Float:vEnd[3];
+		TR_GetEndPosition(vEnd, trace_ray);
+		Distance = (GetVectorDistance(vOrigin, vEnd));
+
+		if (Distance < MAX_SPAWN_DISTANCE)
+		{
+			new iPumpkin = CreateEntityByName(ENTITY_NAME_PUMPKIN);
+
+			if(IsValidEntity(iPumpkin))
+			{		
+				if(GetEntityCount() < GetMaxEntities()-32)
+				{
+					PrintToChat (iClient, "[DeathPerks] Pumpkin spawned.");
+
+					DispatchSpawn(iPumpkin);
+					vEnd[2] += OFFSET_HEIGHT_PUMPKIN;
+
+					new Float:ModelAngle[3] = VECTOR_ANGLE_PUMPKIN;
+					TeleportEntity(iPumpkin, vEnd, ModelAngle, NULL_VECTOR);
+
+					// explode pumpkin
+					new Handle:pack;
+					g_hPumpkinTimerHandle[iClient] = CreateDataTimer(PUMPKINTIMER_EXPLODE_DELAY, CallExplodePumpkin, pack);
+
+					WritePackCell(pack, iClient);
+					WritePackCell(pack, iPumpkin);
+
+				}
+				else
+				{
+					PrintToChat (iClient, "[DeathPerks] ERROR - Unable to spawn pumpkin, maxEntities reached.");
+				}
+
+			}
+			else
+			{
+				PrintToChat (iClient, "[DeathPerks] ERROR - Unknown error, pumpkin spawn failed.");
+			}
+		}
+	}
+	else
+	{
+		PrintToChat (iClient, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
+	}
+
+	CloseHandle(trace_ray);
 }
 
 public SpawnBeachBall(client)
@@ -547,7 +551,6 @@ public LightningStrike(Float:vEnd[3])
 	EmitSoundToAll(LIGHTNING_SOUND_THUNDER, client, SNDCHAN_AUTO, SNDLEVEL_GUNFIRE, SND_NOFLAGS, SNDVOL_NORMAL);
 
 }
-
 
 // Create Menu 
 public Action:Panel_ChangeDeathItem(iClient)
