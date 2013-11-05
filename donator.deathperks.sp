@@ -755,25 +755,6 @@ public Action:CallExplodeDrum(Handle:Timer, Handle:pack)
 }
 
 
-public Action:CallExplodeObject(Handle:timer, Handle:pack)
-{
-	ResetPack(pack);
-	new client = ReadPackCell(pack);
-	new object = ReadPackCell(pack);
-	new damage = ReadPackCell(pack);
-
-	ExplodeObject(client, object, damage);
-
-	//TODO hook to handle?
-}
-
-public ExplodeObject(client, object, damage)
-{
-	if( IsValidEntity(object))
-	{
-		SDKHooks_TakeDamage(object, client, client, damage, DMG_GENERIC);
-	}
-}
 // timer: explode pumpkin
 public Action:CallExplodePumpkin(Handle:Timer, Handle:pack)
 {
