@@ -329,9 +329,27 @@ public Action:Event_PlayerDeath(Handle:event, const String:name[], bool:dontBroa
 	return Plugin_Continue;
 }
 
-public GetTraceRayVectors(client, Float:vOrigin[3], Float:vEnd[3], &Float:distance)
+public bool:GetTraceRayDownVectors(client, Float:vOrigin[3], Float:vEnd[3], &Float:distance)
 {
+	decl Handle:trace_ray;
+	GetClientEyePosition(client, vOrigin);
+	trace_ray = TR_TraceRayFilterEx(vOrigin, VECTOR_ANGLE_DOWN, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
+
+	if (!TR_DidHit(trace_ray))
+	{
+		CloseHandle(trace_ray);
+		return false;
+	}
+
+	TR_GetEndPosition(vEnd, trace_ray);
 	CloseHandle(trace_ray);
+	distance = (GetVectorDistance(vOrigin, vEnd));
+	if (distance < MAX_SPAWN_DISTANCE)
+	{
+		return false;
+	}
+
+	return true;
 }
 public SpawnPumpkin(client)
 {
@@ -483,7 +501,7 @@ public SpawnOildrum(client)
 	}
 
 	CloseHandle(trace_ray);
-	
+
 }
 
 public SpawnFrog(client)
@@ -574,7 +592,7 @@ public Action:Panel_ChangeDeathItem(client)
 		IntToString(Action_Null, iCompare, sizeof(iCompare));
 		AddMenuItem(menu, iCompare, MENUSELECT_ITEM_NULL, ITEMDRAW_DEFAULT);
 	}
-	
+
 	// Exploding pumpkin
 	if (_:iSelected == Action_Pumpkin)
 	{
@@ -588,7 +606,7 @@ public Action:Panel_ChangeDeathItem(client)
 		IntToString(Action_Pumpkin, iCompare, sizeof(iCompare));
 		AddMenuItem(menu, iCompare, MENUSELECT_ITEM_PUMPKIN, ITEMDRAW_DEFAULT);
 	}
-	
+
 	// Ball
 	if (_:iSelected == Action_Ball)
 	{
@@ -602,7 +620,7 @@ public Action:Panel_ChangeDeathItem(client)
 		IntToString(Action_Ball, iCompare, sizeof(iCompare));
 		AddMenuItem(menu, iCompare, MENUSELECT_ITEM_BALL, ITEMDRAW_DEFAULT);
 	}
-	
+
 	// Oildrum
 	if (_:iSelected == Action_Oildrum)
 	{
@@ -616,7 +634,7 @@ public Action:Panel_ChangeDeathItem(client)
 		IntToString(Action_Oildrum, iCompare, sizeof(iCompare));
 		AddMenuItem(menu, iCompare, MENUSELECT_ITEM_OILDRUM, ITEMDRAW_DEFAULT);
 	}
-	
+
 	// Frog
 	if (_:iSelected == Action_Frog)
 	{
@@ -630,7 +648,7 @@ public Action:Panel_ChangeDeathItem(client)
 		IntToString(Action_Frog, iCompare, sizeof(iCompare));
 		AddMenuItem(menu, iCompare, MENUSELECT_ITEM_FROG, ITEMDRAW_DEFAULT);
 	}
-	
+
 	// Ghost
 	if (_:iSelected == Action_Ghost)
 	{
@@ -644,7 +662,7 @@ public Action:Panel_ChangeDeathItem(client)
 		IntToString(Action_Ghost, iCompare, sizeof(iCompare));
 		AddMenuItem(menu, iCompare, MENUSELECT_ITEM_GHOST, ITEMDRAW_DEFAULT);
 	}
-	
+
 	DisplayMenu(menu, client, 20);
 }
 
@@ -658,10 +676,10 @@ public DeathItemMenuHandler(Handle:menu, MenuAction:action, param1, param2)
 	switch (action)
 	{
 		case MenuAction_Select:
-		{
-			SetClientCookie(param1, g_hDeathItemCookie, iSelected);
-		}
-//		case MenuAction_Cancel: ;
+			{
+				SetClientCookie(param1, g_hDeathItemCookie, iSelected);
+			}
+			//		case MenuAction_Cancel: ;
 		case MenuAction_End: CloseHandle(menu);
 	}
 }
@@ -698,11 +716,11 @@ public Action:CallSpawnFrog(Handle:Timer, Handle:pack)
 	vEnd[0] = ReadPackFloat(pack);
 	vEnd[1] = ReadPackFloat(pack);
 	vEnd[2] = ReadPackFloat(pack);
-	
-//	PrintToChat (client, "[DeathPerks] Attempting to create frog at (%f, %f, %f) for client #%d.", vEnd[0], vEnd[1], vEnd[2], client);
+
+	//	PrintToChat (client, "[DeathPerks] Attempting to create frog at (%f, %f, %f) for client #%d.", vEnd[0], vEnd[1], vEnd[2], client);
 
 	new iFrog = CreateEntityByName(ENTITY_NAME_FROG);
-	
+
 	if(IsValidEntity(iFrog))
 	{		
 		if(GetEntityCount() < GetMaxEntities()-32)
@@ -735,7 +753,7 @@ public Action:CallSpawnFrog(Handle:Timer, Handle:pack)
 		{
 			PrintToChat (client, "[DeathPerks] ERROR - Unable to spawn frog, maxEntities reached.");
 		}
-		
+
 	}
 	else
 	{
@@ -755,7 +773,7 @@ public Action:CallExplodeDrum(Handle:Timer, Handle:pack)
 	ResetPack(pack);
 	new client = ReadPackCell(pack);
 	new iOildrum = ReadPackCell(pack);
-	
+
 	// will this cover if the oil drum is already exploded by a player?	
 	if ( IsValidEntity(iOildrum) )
 	{	
@@ -807,7 +825,7 @@ public Action:CallExplodePumpkin(Handle:Timer, Handle:pack)
 	{
 		PrintToServer ("[DeathPerks] CATCH - Pumpkin no longer exists.");
 	}
-	
+
 	g_hPumpkinTimerHandle[client] = INVALID_HANDLE;
 
 }
@@ -829,7 +847,7 @@ public OnMapEnd()
 // Cleanup all timers
 public CleanUpTimers()
 {
-    for (new client=1; client <= MaxClients; client++)
+	for (new client=1; client <= MaxClients; client++)
 	{
 		CleanUpTimersForClient(client);
 	}
