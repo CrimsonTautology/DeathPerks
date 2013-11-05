@@ -222,7 +222,7 @@ public OnMapStart()
 }
 
 
-public DonatorMenu:ChangeDeathItemCallback(iClient) Panel_ChangeDeathItem(iClient);
+public DonatorMenu:ChangeDeathItemCallback(client) Panel_ChangeDeathItem(client);
 
 
 public hook_Start(Handle:event, const String:name[], bool:dontBroadcast)
@@ -237,25 +237,25 @@ public hook_Win(Handle:event, const String:name[], bool:dontBroadcast)
 	g_bRoundEnded = true;
 	
 	// Handle Ghost
-	for (new iClientIdx = 1; iClientIdx <= MaxClients && IsDonatorInGame(iClientIdx); iClientIdx++)
+    for (new client=1; client <= MaxClients && IsDonatorInGame(client); client++)
 	{
 		decl String:iTmp[32];
 		new iSelected;
 
-		GetClientCookie(iClientIdx, g_hDeathItemCookie, iTmp, sizeof(iTmp));
+		GetClientCookie(client, g_hDeathItemCookie, iTmp, sizeof(iTmp));
 		iSelected = StringToInt(iTmp);
 
 		if (_:iSelected == Action_Ghost)
 		{
 			// apparently will crash server if you try to set this twice (like on plr_hightower_event)
-			if (!TF2_IsPlayerInCondition(iClientIdx, TFCONDITION_GHOST))
+			if (!TF2_IsPlayerInCondition(client, TFCONDITION_GHOST))
 			{
-				PrintToChat (iClientIdx, "[DeathPerks] Ghost spawned.");
-				TF2_AddCondition(iClientIdx, TFCONDITION_GHOST, 60.0, 0);
+				PrintToChat (client, "[DeathPerks] Ghost spawned.");
+				TF2_AddCondition(client, TFCONDITION_GHOST, 60.0, 0);
 			}
 			else
 			{
-				PrintToChat (iClientIdx, "[DeathPerks] ERROR - Already a ghost.");
+				PrintToChat (client, "[DeathPerks] ERROR - Already a ghost.");
 			}
 		}
 	}
@@ -267,56 +267,55 @@ public Bool:IsDonatorInGame(client)
 	return IsClientInGame(client) && !IsFakeClient(client) && IsPlayerDonator(client);
 }
 
-
 public Action:event_player_death(Handle:event, const String:name[], bool:dontBroadcast)
 {
 	// Round ended check
 	if(!g_bRoundEnded)
 		return Plugin_Continue;
 
-	new iClient = GetClientOfUserId(GetEventInt(event, "userid"));
+	new client = GetClientOfUserId(GetEventInt(event, "userid"));
 		
 	// Donator check
-	if (!IsPlayerDonator(iClient)) 
+	if (!IsPlayerDonator(client)) 
 		return Plugin_Continue;
 		
 	decl String:iTmp[32];
 	new iSelected;
 
 	// Get player's choice of item to spawn
-	GetClientCookie(iClient, g_hDeathItemCookie, iTmp, sizeof(iTmp));	
+	GetClientCookie(client, g_hDeathItemCookie, iTmp, sizeof(iTmp));	
 	iSelected = StringToInt(iTmp);
 
 	switch (iSelected)
 	{
 		case Action_Null:
 		{
-			PrintToChat (iClient, "[DeathPerks] Nothing spawned.");
+			PrintToChat (client, "[DeathPerks] Nothing spawned.");
 		}
 		
 		case Action_Pumpkin:
 		{
-			SpawnPumpkin(iClient);
+			SpawnPumpkin(client);
 		}
 		
 		case Action_Ball:
 		{
-			SpawnBeachBall(iClient);
+			SpawnBeachBall(client);
 		}
 		
 		case Action_Oildrum:
 		{
-			SpawnOildrum(iClient);
+			SpawnOildrum(client);
 		}
 
 		case Action_Frog:
 		{
-			SpawnFrog(iClient);
+			SpawnFrog(client);
 		}
 
 		case Action_Ghost:
 		{
-			//PrintToChat (iClient, "[DeathPerks] Ghost spawned.");
+			//PrintToChat (client, "[DeathPerks] Ghost spawned.");
 		}
 		
 		// If we get here, the cookie hasn't been set properly - so set it!
@@ -325,13 +324,12 @@ public Action:event_player_death(Handle:event, const String:name[], bool:dontBro
 		{
 			new String:iTemp[32];
 			IntToString(Action_Null, iTemp, sizeof(iTemp));
-			SetClientCookie(iClient, g_hDeathItemCookie, iTemp);		
-			PrintToChat (iClient, "[DeathPerks] Normalizing cookie - for extra yum!");
+			SetClientCookie(client, g_hDeathItemCookie, iTemp);		
+			PrintToChat (client, "[DeathPerks] Normalizing cookie - for extra yum!");
 		}
 		
 	}
 
-	
 	return Plugin_Continue;
 }
 
@@ -358,7 +356,7 @@ public SpawnPumpkin(client)
 			{		
 				if(GetEntityCount() < GetMaxEntities()-32)
 				{
-					PrintToChat (iClient, "[DeathPerks] Pumpkin spawned.");
+					PrintToChat (client, "[DeathPerks] Pumpkin spawned.");
 
 					DispatchSpawn(iPumpkin);
 					vEnd[2] += OFFSET_HEIGHT_PUMPKIN;
@@ -368,27 +366,27 @@ public SpawnPumpkin(client)
 
 					// explode pumpkin
 					new Handle:pack;
-					g_hPumpkinTimerHandle[iClient] = CreateDataTimer(PUMPKINTIMER_EXPLODE_DELAY, CallExplodePumpkin, pack);
+					g_hPumpkinTimerHandle[client] = CreateDataTimer(PUMPKINTIMER_EXPLODE_DELAY, CallExplodePumpkin, pack);
 
-					WritePackCell(pack, iClient);
+					WritePackCell(pack, client);
 					WritePackCell(pack, iPumpkin);
 
 				}
 				else
 				{
-					PrintToChat (iClient, "[DeathPerks] ERROR - Unable to spawn pumpkin, maxEntities reached.");
+					PrintToChat (client, "[DeathPerks] ERROR - Unable to spawn pumpkin, maxEntities reached.");
 				}
 
 			}
 			else
 			{
-				PrintToChat (iClient, "[DeathPerks] ERROR - Unknown error, pumpkin spawn failed.");
+				PrintToChat (client, "[DeathPerks] ERROR - Unknown error, pumpkin spawn failed.");
 			}
 		}
 	}
 	else
 	{
-		PrintToChat (iClient, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
+		PrintToChat (client, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
 	}
 
 	CloseHandle(trace_ray);
@@ -418,7 +416,7 @@ public SpawnBeachBall(client)
 		new Float:ModelAngle[3] = VECTOR_ANGLE_BALL;
 		TeleportEntity(iBall, vOrigin, ModelAngle, NULL_VECTOR);
 
-		PrintToChat (iClient, "[DeathPerks] Ball spawned.");
+		PrintToChat (client, "[DeathPerks] Ball spawned.");
 	}
 
 }
@@ -461,26 +459,26 @@ public SpawnOildrum(client)
 
 					// explode drum
 					new Handle:pack;
-					g_hDrumTimerHandle[iClient] = CreateDataTimer(DRUMTIMER_EXPLODE_DELAY, CallExplodeDrum, pack);
+					g_hDrumTimerHandle[client] = CreateDataTimer(DRUMTIMER_EXPLODE_DELAY, CallExplodeDrum, pack);
 
-					WritePackCell(pack, iClient);
+					WritePackCell(pack, client);
 					WritePackCell(pack, iOildrum);
 
 				}
 				else
 				{
-					PrintToChat (iClient, "[DeathPerks] ERROR - Unable to spawn oildrum, maxEntities reached.");
+					PrintToChat (client, "[DeathPerks] ERROR - Unable to spawn oildrum, maxEntities reached.");
 				}
 
 			}
 			else
 			{
-				PrintToChat (iClient, "[DeathPerks] ERROR - Unknown error, oildrum spawn failed.");
+				PrintToChat (client, "[DeathPerks] ERROR - Unknown error, oildrum spawn failed.");
 			}
 		}
 		else
 		{
-			PrintToChat (iClient, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
+			PrintToChat (client, "[DeathPerks] ERROR - Sorry, unable to locate ground!");
 		}
 	}
 
@@ -553,7 +551,7 @@ public LightningStrike(Float:vEnd[3])
 }
 
 // Create Menu 
-public Action:Panel_ChangeDeathItem(iClient)
+public Action:Panel_ChangeDeathItem(client)
 {
 	new Handle:menu = CreateMenu(DeathItemMenuHandler);
 	decl String:iTmp[32];
@@ -561,7 +559,7 @@ public Action:Panel_ChangeDeathItem(iClient)
 
 	SetMenuTitle(menu, MENUTITLE_SPAWN_ITEM);
 
-	GetClientCookie(iClient, g_hDeathItemCookie, iTmp, sizeof(iTmp));
+	GetClientCookie(client, g_hDeathItemCookie, iTmp, sizeof(iTmp));
 	iSelected = StringToInt(iTmp);
 
 	if (_:iSelected == Action_Null)
@@ -647,7 +645,7 @@ public Action:Panel_ChangeDeathItem(iClient)
 		AddMenuItem(menu, iCompare, MENUSELECT_ITEM_GHOST, ITEMDRAW_DEFAULT);
 	}
 	
-	DisplayMenu(menu, iClient, 20);
+	DisplayMenu(menu, client, 20);
 }
 
 
@@ -684,14 +682,14 @@ public Action:CallSpawnFrog(Handle:Timer, Handle:pack)
 {
 	// Set to the beginning and unpack it
 	ResetPack(pack);
-	new iClient = ReadPackCell(pack);
+	new client = ReadPackCell(pack);
 
 	decl Float:vEnd[3];
 	vEnd[0] = ReadPackFloat(pack);
 	vEnd[1] = ReadPackFloat(pack);
 	vEnd[2] = ReadPackFloat(pack);
 	
-//	PrintToChat (iClient, "[DeathPerks] Attempting to create frog at (%f, %f, %f) for client #%d.", vEnd[0], vEnd[1], vEnd[2], iClient);
+//	PrintToChat (client, "[DeathPerks] Attempting to create frog at (%f, %f, %f) for client #%d.", vEnd[0], vEnd[1], vEnd[2], client);
 
 	new iFrog = CreateEntityByName(ENTITY_NAME_FROG);
 	
@@ -721,21 +719,21 @@ public Action:CallSpawnFrog(Handle:Timer, Handle:pack)
 			}
 
 
-			PrintToChat (iClient, "[DeathPerks] Frog spawned.");
+			PrintToChat (client, "[DeathPerks] Frog spawned.");
 		}
 		else
 		{
-			PrintToChat (iClient, "[DeathPerks] ERROR - Unable to spawn frog, maxEntities reached.");
+			PrintToChat (client, "[DeathPerks] ERROR - Unable to spawn frog, maxEntities reached.");
 		}
 		
 	}
 	else
 	{
-		PrintToChat (iClient, "[DeathPerks] ERROR - Unknown error, frog spawn failed.");
+		PrintToChat (client, "[DeathPerks] ERROR - Unknown error, frog spawn failed.");
 	}
 
 
-	g_hFrogTimerHandle[iClient] = INVALID_HANDLE;
+	g_hFrogTimerHandle[client] = INVALID_HANDLE;
 
 }
 
@@ -745,20 +743,20 @@ public Action:CallExplodeDrum(Handle:Timer, Handle:pack)
 {
 	// Set to the beginning and unpack it
 	ResetPack(pack);
-	new iClient = ReadPackCell(pack);
+	new client = ReadPackCell(pack);
 	new iOildrum = ReadPackCell(pack);
 	
 	// will this cover if the oil drum is already exploded by a player?	
 	if ( IsValidEntity(iOildrum) )
 	{	
-		SDKHooks_TakeDamage(iOildrum, iClient, iClient, DRUMTIMER_EXPLODE_DAMAGE, DMG_GENERIC);
+		SDKHooks_TakeDamage(iOildrum, client, client, DRUMTIMER_EXPLODE_DAMAGE, DMG_GENERIC);
 	}
 	else
 	{
 		PrintToServer ("[DeathPerks] CATCH - Oildrum no longer exists.");
 	}
 
-	g_hDrumTimerHandle[iClient] = INVALID_HANDLE;
+	g_hDrumTimerHandle[client] = INVALID_HANDLE;
 
 }
 
@@ -787,20 +785,20 @@ public Action:CallExplodePumpkin(Handle:Timer, Handle:pack)
 {
 	// Set to the beginning and unpack it
 	ResetPack(pack);
-	new iClient = ReadPackCell(pack);
+	new client = ReadPackCell(pack);
 	new iPumpkin = ReadPackCell(pack);
 
 	// will this cover if the pumpkin is already exploded by a player?	
 	if ( IsValidEntity(iPumpkin) )
 	{	
-		SDKHooks_TakeDamage(iPumpkin, iClient, iClient, PUMPKINTIMER_EXPLODE_DAMAGE, DMG_GENERIC);
+		SDKHooks_TakeDamage(iPumpkin, client, client, PUMPKINTIMER_EXPLODE_DAMAGE, DMG_GENERIC);
 	}
 	else
 	{
 		PrintToServer ("[DeathPerks] CATCH - Pumpkin no longer exists.");
 	}
 	
-	g_hPumpkinTimerHandle[iClient] = INVALID_HANDLE;
+	g_hPumpkinTimerHandle[client] = INVALID_HANDLE;
 
 }
 
