@@ -21,6 +21,7 @@
 // * 2013-08-09	-	0.1.12		-	add ghost - handle remnant particle/glow effects, use array to enable/disable
 // * 2013-08-17	-	0.1.13		-	add ball scale, disable ghost until particle/glow is fixed
 // * 2013-11-03	-	0.1.14		-	use newly added tfcondition ghost mode, trigger oildrum+pumpkin to explode, disable ball scale
+// * 2013-11-05	-	0.2.14		-   Who knows!? type "git log" to find out!!!
 //	------------------------------------------------------------------------------------
 
 
