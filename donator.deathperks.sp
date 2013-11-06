@@ -155,8 +155,6 @@ enum _:CookieActionType
 //	Action_Bird = 7,
 };
 
-new Array:
-
 // GLOBALS
 new Handle:g_hDeathItemCookie = INVALID_HANDLE;
 new bool:g_bRoundEnded = false;
@@ -236,9 +234,9 @@ public Event_StartRound(Handle:event, const String:name[], bool:dontBroadcast)
 public Event_WinRound(Handle:event, const String:name[], bool:dontBroadcast)
 {	
 	g_bRoundEnded = true;
-	
+
 	// Handle Ghost
-    for (new client=1; client <= MaxClients && IsDonatorInGame(client); client++)
+	for (new client=1; client <= MaxClients && IsDonatorInGame(client); client++)
 	{
 		decl String:iTmp[32];
 		new iSelected;
@@ -249,10 +247,10 @@ public Event_WinRound(Handle:event, const String:name[], bool:dontBroadcast)
 		if (_:iSelected == Action_Ghost)
 		{
 			// apparently will crash server if you try to set this twice (like on plr_hightower_event)
-			if (!TF2_IsPlayerInCondition(client, TFCONDITION_GHOST))
+			if (!TF2_IsPlayerInCondition(client, TFCond:TFCONDITION_GHOST))
 			{
 				PrintToChat (client, "[DeathPerks] Ghost spawned.");
-				TF2_AddCondition(client, TFCONDITION_GHOST, 60.0, 0);
+				TF2_AddCondition(client, TFCond:TFCONDITION_GHOST, 60.0, 0);
 			}
 			else
 			{
@@ -333,7 +331,8 @@ public bool:GetTraceRayDownVectors(client, Float:vOrigin[3], Float:vEnd[3])
 {
 	decl Handle:trace_ray;
 	GetClientEyePosition(client, vOrigin);
-	trace_ray = TR_TraceRayFilterEx(vOrigin, VECTOR_ANGLE_DOWN, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
+	new Float:vDown[3] = VECTOR_ANGLE_DOWN;
+	trace_ray = TR_TraceRayFilterEx(vOrigin, vDown, MASK_PROP_SPAWN, RayType_Infinite, TraceRayProp);
 
 	if (!TR_DidHit(trace_ray))
 	{
@@ -353,7 +352,7 @@ public bool:GetTraceRayDownVectors(client, Float:vOrigin[3], Float:vEnd[3])
 }
 public SpawnPumpkin(client)
 {
-	decl Float:vOrigin[3], vEnd[3];
+	decl Float:vOrigin[3], Float:vEnd[3];
 
 	if (CanSpawnEntity() && GetTraceRayDownVectors(client, vOrigin, vEnd))
 	{
@@ -364,7 +363,8 @@ public SpawnPumpkin(client)
 			DispatchSpawn(iPumpkin);
 			vEnd[2] += OFFSET_HEIGHT_PUMPKIN;
 
-			TeleportEntity(iPumpkin, vEnd, VECTOR_ANGLE_PUMPKIN, NULL_VECTOR);
+			new Float:ModelAngle[3] = VECTOR_ANGLE_PUMPKIN;
+			TeleportEntity(iPumpkin, vEnd, ModelAngle, NULL_VECTOR);
 
 			// explode pumpkin
 			new Handle:pack;
@@ -410,7 +410,7 @@ public SpawnBeachBall(client)
 
 public SpawnOildrum(client)
 {
-	decl Float:vOrigin[3], vEnd[3];
+	decl Float:vOrigin[3], Float:vEnd[3];
 
 	if (CanSpawnEntity() && GetTraceRayDownVectors(client, vOrigin, vEnd))
 	{
@@ -447,11 +447,11 @@ public SpawnOildrum(client)
 
 public SpawnFrog(client)
 {
-	decl Float:vOrigin[3], vEnd[3];
+	decl Float:vOrigin[3], Float:vEnd[3];
 
 	if (CanSpawnEntity() && GetTraceRayDownVectors(client, vOrigin, vEnd))
 	{
-		LightningStrike(vEnd);
+		LightningStrike(client, vEnd);
 		// spawn frog
 		new Handle:pack;
 		g_hFrogTimerHandle[client] = CreateDataTimer(FROGTIMER_SPAWN_DELAY, CallSpawnFrog, pack);
@@ -463,7 +463,7 @@ public SpawnFrog(client)
 	}
 }
 
-public LightningStrike(Float:vOrigin[3])
+public LightningStrike(client, Float:vOrigin[3])
 {
 	// define where the lightning strike starts
 	new Float:vStart[3];
@@ -495,7 +495,7 @@ public LightningStrike(Float:vOrigin[3])
 
 }
 
-public Explosion(vOrigin)
+public Explosion(Float:vOrigin[3])
 {
 	new hExplosion = CreateEntityByName(ENTITY_NAME_EXPLOSION);
 	DispatchKeyValue(hExplosion, EXPLOSIONKEYVALUE_MAGNITUDE, EXPLOSION_MAGNITUDE);
@@ -637,12 +637,12 @@ public bool:TraceRayProp(entityhit, mask)
 	return false;
 }
 
-public Bool:IsDonatorInGame(client)
+public bool:IsDonatorInGame(client)
 {
 	return IsClientInGame(client) && !IsFakeClient(client) && IsPlayerDonator(client);
 }
 
-public Bool:CanSpawnEntity()
+public bool:CanSpawnEntity()
 {
 	return GetEntityCount() < GetMaxEntities()-32;
 }
