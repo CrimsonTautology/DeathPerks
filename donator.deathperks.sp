@@ -237,8 +237,12 @@ public Event_WinRound(Handle:event, const String:name[], bool:dontBroadcast)
 	g_bRoundEnded = true;
 
 	// Handle Ghost
-	for (new client=1; client <= MaxClients && IsDonatorInGame(client); client++)
+	for (new client=1; client <= MaxClients; client++)
 	{
+        if(!IsDonatorInGame(client))
+        {
+            continue;
+        }
 		decl String:iTmp[32];
 		new iSelected;
 
